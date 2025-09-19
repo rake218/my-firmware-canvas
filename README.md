@@ -20,6 +20,7 @@ A living portfolio of embedded C challenges documenting:
 ## 🚦 Quick Start
 Run all tests via:
 - `./tools/run_all_tests.sh`
+- or
 Run a single challenge in Docker
 - `cd challenges/001-sample-challenge`
 - `docker build -t challenge001 .`
