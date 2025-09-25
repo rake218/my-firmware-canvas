@@ -1,0 +1,15 @@
+{
+  "name": "My Firmware Canvas Devcontainer",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash"
+  },
+  "extensions": [
+    "ms-vscode.cpptools",
+    "ms-vscode.cmake-tools",
+    "ms-vscode.remote-containers"
+  ],
+  "postCreateCommand": "chmod +x ./tools/*.sh || true"
+}
