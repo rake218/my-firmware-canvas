@@ -15,3 +15,4 @@ void greet_person(const char *name, char *buf, size_t n) {
         snprintf(buf, n, "Hello, %s!", name);
     }
 }
+/* end of file*/
