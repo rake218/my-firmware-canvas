@@ -1,0 +1,35 @@
+name: Embedded C Challenges CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    name: Build & Test (host)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install apt packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake
+
+      - name: Show environment
+        run: |
+          echo "Runner info:"
+          uname -a
+          gcc --version
+          cmake --version
+
+      - name: Run test runner
+        # call via bash so executable permission is NOT required
+        run: bash ./tools/run_all_tests.sh
+
+      - name: CI summary
+        if: ${{ success() }}
+        run: echo "All challenge tests passed."
