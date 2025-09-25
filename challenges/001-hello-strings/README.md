@@ -22,3 +22,12 @@ From repository root (Codespaces / WSL / Linux):
 - `cd challenges/001-hello-strings`
 - `chmod +x tests/run_tests.sh        # first time only (or CI runs via bash)`
 - `./tests/run_tests.sh`
+
+## Expected output:
+- `All greeting tests passed`
+
+## How to run (manual compile)
+
+- `gcc -Wall -Werror -O2 -std=c99 -I src src/greetings.c tests/test_greetings.c -o test_greetings`
+- `./test_greetings`
+- 
