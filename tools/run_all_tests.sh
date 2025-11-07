@@ -4,13 +4,48 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 echo "Repository root: $ROOT"
 
+# By default, skip challenges that provide their own Dockerfile.
+# To force running Dockerfile-based challenges locally, set:
+#   RUN_DOCKER_CHALLENGES=1 ./tools/run_all_tests.sh
+RUN_DOCKER_CHALLENGES="${RUN_DOCKER_CHALLENGES:-}"
+
 PASS=0
 FAIL=0
 
 for d in "$ROOT"/challenges/*/; do
   [ -d "$d" ] || continue
+  CHAL_NAME="$(basename "$d")"
   echo
-  echo "=== Running tests for: $(basename "$d") ==="
+  echo "=== Running tests for: $CHAL_NAME ==="
+
+  # If a per-challenge Dockerfile exists, skip by default.
+  if [ -f "${d}Dockerfile" ] && [ -z "$RUN_DOCKER_CHALLENGES" ]; then
+    echo "Found per-challenge Dockerfile in $CHAL_NAME — skipping in host-runner."
+    echo "To run locally, set RUN_DOCKER_CHALLENGES=1 and ensure Docker is available."
+    continue
+  fi
+
+  # If Dockerfile exists and RUN_DOCKER_CHALLENGES=1, build & run inside Docker
+  if [ -f "${d}Dockerfile" ] && [ -n "$RUN_DOCKER_CHALLENGES" ]; then
+    echo "Found per-challenge Dockerfile in $CHAL_NAME — building and running inside Docker."
+    IMAGE_NAME="mfc-${CHAL_NAME}-local"
+    (
+      set -x
+      docker build -t "${IMAGE_NAME}" "${d}"
+      # Run tests inside container. Mount repo root to /workspace and run either harness or make test.
+      docker run --rm -v "${ROOT}":/workspace -w "/workspace/challenges/${CHAL_NAME}" "${IMAGE_NAME}" bash -lc '
+        if [ -f tests/run_tests.sh ]; then
+          chmod +x tests/run_tests.sh || true
+          bash tests/run_tests.sh
+        elif [ -f Makefile ]; then
+          make test
+        else
+          echo "No tests found in container for this challenge." ; exit 0
+        fi
+      '
+    ) && { echo "OK (docker)"; PASS=$((PASS+1)); } || { echo "FAIL (docker)"; FAIL=$((FAIL+1)); }
+    continue
+  fi
 
   # 1) If explicit harness exists, run it via bash
   if [ -f "${d}tests/run_tests.sh" ]; then
@@ -33,7 +68,7 @@ for d in "$ROOT"/challenges/*/; do
     continue
   fi
 
-  echo "No host tests found in $(basename "$d"), skipping."
+  echo "No host tests found in $CHAL_NAME, skipping."
 done
 
 echo
