@@ -10,6 +10,8 @@ MEMORY
 /* Place the sections */
 SECTIONS
 {
+  /* Force the linker to start allocating at FLASH origin */
+  . = ORIGIN(FLASH);
   .text ALIGN(4) : 
   {
     KEEP(*(.vectors))   /* preserve interrupt vector if any */
