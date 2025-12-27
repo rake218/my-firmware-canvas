@@ -1,4 +1,4 @@
-# Challenge 004 — Linker Scripts (Intro)
+# Challenge 004 : Linker Scripts (Intro)
 
 Goal
 ----
