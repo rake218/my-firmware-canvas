@@ -18,11 +18,6 @@ RUN wget -q https://developer.arm.com/-/media/Files/downloads/gnu/12.3.rel1/binr
     && mv arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-eabi /opt/arm \
     && rm *.tar.xz
 
-# Qemu
-RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get install -y qemu-system-arm qemu-efi \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-
 
 ENV PATH="/opt/arm/bin:${PATH}"
 
