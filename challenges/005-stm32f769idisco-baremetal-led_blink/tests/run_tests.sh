@@ -5,7 +5,8 @@ rm -rf build
 mkdir build
 cd build
 
-cmake ..
+cmake .. \
+  -DCMAKE_TOOLCHAIN_FILE=../../tools/arm-none-eabi.cmake
 make
 
 echo "== Running in QEMU =="
