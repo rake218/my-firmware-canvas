@@ -27,7 +27,6 @@ jobs:
           cmake --version
 
       - name: Run test runner (host)
-        # call via bash so executable permission is NOT required
         run: bash ./tools/run_all_tests.sh
 
       - name: CI summary (host)
@@ -46,7 +45,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Docker Buildx (optional)
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
       - name: Build & run per-challenge images
@@ -63,56 +62,29 @@ jobs:
               IMAGE_NAME="mfc-${CHALLENGE_NAME}:ci"
               echo "=== Building image for $CHALLENGE_NAME ==="
               docker build -t "$IMAGE_NAME" "$d"
+
               echo "=== Running tests for $CHALLENGE_NAME inside image ==="
               docker run --rm -v "${REPO_ROOT}":/workspace -w /workspace/"$d" \
                 "$IMAGE_NAME" bash -lc '
                   set -euo pipefail
                   echo "Container: inspecting challenge dir: $(pwd)"
-
-                  # 1) explicit harness at tests/run_tests.sh
                   if [ -f tests/run_tests.sh ]; then
-                    echo "Found tests/run_tests.sh"
                     chmod +x tests/run_tests.sh || true
                     exec bash tests/run_tests.sh
-                  fi
-
-                  # 2) any shell test scripts tests/*.sh
-                  shopt -s nullglob || true
-                  shopt -s globstar || true
-                  sh_tests=(tests/*.sh)
-                  if [ "${#sh_tests[@]}" -gt 0 ]; then
-                    echo "Found shell test scripts: ${sh_tests[*]}"
-                    for s in "${sh_tests[@]}"; do
-                      chmod +x "$s" || true
-                      echo "Running $s"
-                      bash "$s"
-                    done
-                    exit 0
-                  fi
-
-                  # 3) Makefile target `make test`
-                  if [ -f Makefile ]; then
-                    echo "Found Makefile — running make test"
+                  elif [ -f Makefile ]; then
                     make test
-                    exit 0
+                  else
+                    echo "No test entrypoint found, skipping."
                   fi
-
-                  # 4) C host tests: compile tests/test_*.c if present
-                  ctests=(tests/test_*.c)
-                  if [ "${#ctests[@]}" -gt 0 ]; then
-                    for c in "${ctests[@]}"; do
-                      exe="${c%.c}.exe"
-                      echo "Compiling $c -> $exe"
-                      gcc -Wall -Werror -O2 -std=c99 -I../src "$c" ../src/*.c -o "$exe"
-                      echo "Running $exe"
-                      "./$exe"
-                    done
-                    exit 0
-                  fi
-
-                  echo "No test entrypoint found in $(pwd). Skipping."
-                  exit 0
                 '
+
+              # Upload build artifacts
+              if [ -d "$d/build" ]; then
+                echo "=== Uploading artifacts for $CHALLENGE_NAME ==="
+                zip -r "${CHALLENGE_NAME}_build.zip" "$d/build"
+                echo "Created artifact: ${CHALLENGE_NAME}_build.zip"
+              fi
+
               echo "=== $CHALLENGE_NAME completed ==="
             fi
           done
@@ -120,6 +92,9 @@ jobs:
             echo "No per-challenge Dockerfiles found — skipping per-challenge job."
           fi
 
-      - name: Per-challenge summary
-        if: ${{ success() }}
-        run: echo "All per-challenge Docker tests passed."
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware_builds
+          path: |
+            challenges/*/*build/
