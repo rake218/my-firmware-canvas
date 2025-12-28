@@ -97,4 +97,4 @@ jobs:
         with:
           name: firmware_builds
           path: |
-            challenges/*/*_build.zip
+            challenges/*/*build/
