@@ -15,9 +15,10 @@ set -euo pipefail
 # -----------------------------------------------------------------------------
 # Step 0: Clean and prepare build directory
 # -----------------------------------------------------------------------------
-rm -rf build          # Remove old build artifacts (if any)
-mkdir -p build        # Create a fresh build directory
-cd build              # Move into the build directory
+BUILD_DIR="build"
+rm -rf "$BUILD_DIR"          # Remove old build artifacts (if any)
+mkdir -p "$BUILD_DIR"        # Create a fresh build directory
+cd "$BUILD_DIR"              # Move into the build directory
 
 # -----------------------------------------------------------------------------
 # Step 1: Configure CMake with ARM cross-compilation toolchain
@@ -52,7 +53,18 @@ if [ ! -f LED_Blink.bin ]; then
 fi
 
 echo " Firmware built successfully: ELF and BIN generated"
+if [[ -f LED_Blink.elf ]]; then
+    echo "ELF file generated: $BUILD_DIR/LED_Blink.elf"
+else
+    echo "ERROR: ELF file not found!"
+    exit 1
+fi
 
+if [[ -f LED_Blink.bin ]]; then
+    echo "BIN file generated: $BUILD_DIR/LED_Blink.bin"
+else
+    echo "WARNING: BIN file not found!"
+fi
 # -----------------------------------------------------------------------------
 # Step 4: Minimal host-side verification
 # - Uses objdump to list sections (.text, .data, .bss)
