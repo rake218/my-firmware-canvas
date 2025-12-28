@@ -24,6 +24,6 @@ int main(void)
     while (1)
     {
         GPIOI_ODR ^= (1 << 1);   /* Toggle PI1 */
-        delay(2000000);          /* Simple software delay */
+        delay(1000000);          /* Simple software delay */
     }
 }
